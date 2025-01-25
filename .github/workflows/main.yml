@@ -1,4 +1,4 @@
-name: 4G Qemu
+name: Windows Server 2022 - Install Ngrok (Keep Alive)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  install-chocolatey-and-tailscale:
+  install-ngrok:
     runs-on: windows-2022
     timeout-minutes: 360  # Max time before the job is automatically canceled (6 hours)
 
@@ -18,20 +18,26 @@ jobs:
       run: |
         Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 
-    - name: Install Chocolatey
+    - name: Download Ngrok
       run: |
-        # Install Chocolatey package manager
-        Set-ExecutionPolicy Bypass -Scope Process -Force;
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
-        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
 
-    - name: Install Tailscale using Chocolatey
+    - name: Extract Ngrok
       run: |
-        choco install tailscale -y
+        Expand-Archive -Path "ngrok.zip" -DestinationPath "C:\ngrok"
 
-    - name: Start Tailscale service
+    - name: Add Ngrok to PATH
       run: |
-        tailscale up
+        $env:Path += ";C:\ngrok"
+        [System.Environment]::SetEnvironmentVariable('Path', $env:Path, [System.EnvironmentVariableTarget]::Machine)
+
+    - name: Verify Ngrok installation
+      run: |
+        ngrok version
+
+    - name: Start Ngrok service
+      run: |
+        Start-Process -NoNewWindow -FilePath "ngrok" -ArgumentList "http 80"
 
     - name: Keep Alive (Prevent Timeout)
       run: |
