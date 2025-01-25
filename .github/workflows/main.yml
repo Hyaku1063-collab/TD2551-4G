@@ -1,0 +1,43 @@
+name: 4G Qemu
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  install-chocolatey-and-tailscale:
+    runs-on: windows-2022
+    timeout-minutes: 360  # Max time before the job is automatically canceled (6 hours)
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up PowerShell execution policy
+      run: |
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+
+    - name: Install Chocolatey
+      run: |
+        # Install Chocolatey package manager
+        Set-ExecutionPolicy Bypass -Scope Process -Force;
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
+        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+    - name: Install Tailscale using Chocolatey
+      run: |
+        choco install tailscale -y
+
+    - name: Start Tailscale service
+      run: |
+        Start-Service -Name 'Tailscale'
+
+    - name: Confirm Tailscale installation
+      run: |
+        tailscale status
+
+    - name: Keep Alive (Prevent Timeout)
+      run: |
+        # Run an infinite loop to keep the action alive for testing (This is just for demonstration purposes)
+        while ($true) { Start-Sleep -Seconds 60 }
