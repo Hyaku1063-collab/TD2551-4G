@@ -31,11 +31,7 @@ jobs:
 
     - name: Start Tailscale service
       run: |
-        Start-Service -Name 'Tailscale'
-
-    - name: Confirm Tailscale installation
-      run: |
-        tailscale status
+        tailscale up
 
     - name: Keep Alive (Prevent Timeout)
       run: |
